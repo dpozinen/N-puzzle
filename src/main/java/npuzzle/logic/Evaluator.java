@@ -19,15 +19,14 @@ class Evaluator {
 
 	private static int manhattan(State state, int n) {
 		List<Pair<Integer, Integer>> xyList = xyListMap.get(n);
-		List<? extends Integer> tiles = state.getTiles();
-		Integer tile;
+		int[] tiles = state.getTiles();
+		int tile;
 		int x, y;
 		int stateEval = 0;
 
-		for (int index = 0; index < tiles.size(); index++) {
-			x = index % n;
-			y = index / n;
-			tile = tiles.get(index);
+		for (int index = 0; index < tiles.length; index++) {
+			x = index / n; y = index % n;
+			tile = tiles[index];
 			stateEval += Math.abs(x - xyList.get(tile).getKey()) + Math.abs(y - xyList.get(tile).getValue());
 		}
 		return stateEval;
@@ -35,15 +34,14 @@ class Evaluator {
 
 	private static int euclidean(State state, int n) {
 		List<Pair<Integer, Integer>> xyList = xyListMap.get(n);
-		List<? extends Integer> tiles = state.getTiles();
-		Integer tile;
+		int[] tiles = state.getTiles();
+		int tile;
 		int x, y;
 		int stateEval = 0;
 
-		for (int index = 0; index < tiles.size(); index++) {
-			x = index % n;
-			y = index / n;
-			tile = tiles.get(index);
+		for ( int index = 0; index < tiles.length; index++) {
+			x = index / n; y = index % n;
+			tile = tiles[index];
 			stateEval += Math.sqrt(Math.pow(x - xyList.get(tile).getKey(), 2) + Math.pow(y - xyList.get(tile).getValue(), 2));
 		}
 		return stateEval;
@@ -51,10 +49,10 @@ class Evaluator {
 
 //	Counts how many tiles are not in the correct place
 	private static int hamming(State state, int n) {
-		List<Integer> target = finalStateMap.get(n).getTiles();
+		int[] target = finalStateMap.get(n).getTiles();
 		int diff = 0;
-		for (int i = 0; i < state.getTiles().size(); i++)
-			if (!state.getTiles().get(i).equals(target.get(i)))
+		for (int i = 0; i < state.getTiles().length; i++)
+			if (state.getTiles()[i] != target[i])
 				diff++;
 		return diff;
 	}
@@ -73,15 +71,14 @@ class Evaluator {
 	}
 
 	static void addReferenceList(int n) {
-		if (xyListMap.containsKey(n))
-			return;
+		if (xyListMap.containsKey(n)) return;
 		State finalState = State.createFinal(n);
 		finalStateMap.put(n, finalState);
-		List<Integer> finalOrder = finalState.getTiles();
-		List<Pair<Integer, Integer>> xyList = new ArrayList<>(Collections.nCopies(finalOrder.size(), null));
+		int[] finalOrder = finalState.getTiles();
+		List<Pair<Integer, Integer>> xyList = new ArrayList<>(Collections.nCopies(finalOrder.length, null));
 
-		for (int i = 0; i < finalOrder.size(); i++)
-			xyList.set(finalOrder.get(i), new ImmutablePair<>(i / n, i % n));
+		for ( int i = 0; i < finalOrder.length; i++)
+			xyList.set(finalOrder[i], new ImmutablePair<>(i / n, i % n));
 
 		xyListMap.put(n, Collections.unmodifiableList(xyList));
 	}

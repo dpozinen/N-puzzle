@@ -1,5 +1,6 @@
 package npuzzle.logic;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -10,21 +11,21 @@ import static npuzzle.utils.Constants.NO_TILE;
 
 public class State implements Comparable<State> {
 
-	public static final State EMPTY = new State(Collections.emptyList(), StringUtils.EMPTY);
+	public static final State EMPTY = new State(new int[0], StringUtils.EMPTY);
 	private final Evaluator.Heuristic evaluator;
-	private final List<Integer> tiles;
+	private final int[] tiles;
 	private final int n;
 	private int hashcode;
 	private int evaluation;
 	private int pathSize;
 	private State parent;
 
-	private State(List<Integer> tiles, String heuristic) {
+	private State(int[] tiles, String heuristic) {
 		this.tiles = tiles;
 		this.evaluator = Evaluator.getHeuristic(heuristic);
 		this.parent = null;
 		this.pathSize = 0;
-		this.n = (int) Math.sqrt(tiles.size());
+		this.n = (int) Math.sqrt(tiles.length);
 	}
 
 	public static State createFinal(int n) {
@@ -51,15 +52,15 @@ public class State implements Comparable<State> {
 			max--;
 		}
 
-		return new State(tiles, "none");
+		return new State(tiles.stream().mapToInt(i->i).toArray(), "none");
 	}
 
-	public static State createFrom(List<Integer> tiles, String heuristic) {
+	public static State createFrom(int[] tiles, String heuristic) {
 		return new State(tiles, heuristic);
 	}
 
 	private State(State other) {
-		this.tiles = new ArrayList<>(other.tiles);
+		this.tiles = other.tiles.clone();
 		this.evaluator = other.evaluator;
 		this.parent = other.parent;
 		this.pathSize = other.pathSize;
@@ -75,7 +76,7 @@ public class State implements Comparable<State> {
 
 	private int evaluate() {
 		if (evaluation == 0 && evaluator != null)
-			evaluation = evaluator.evaluate(this, n) + pathSize;
+			evaluation = evaluator.evaluate(this, n) * 10 * pathSize + pathSize;
 		else if (evaluation == 0)
 			evaluation = pathSize;
 		return evaluation;
@@ -83,7 +84,7 @@ public class State implements Comparable<State> {
 
 	Set<State> createChildren() {
 		Set<State> children = new HashSet<>();
-		int indexOfEmpty = tiles.indexOf(NO_TILE);
+		int indexOfEmpty = ArrayUtils.indexOf(tiles, NO_TILE);
 
 		if (Utils.canMoveUp(indexOfEmpty, n)) // UP
 			children.add(createChild(indexOfEmpty, indexOfEmpty - n));
@@ -100,8 +101,8 @@ public class State implements Comparable<State> {
 	private State createChild(int i, int j) {
 		State child = childOf(this);
 
-		child.tiles.set(i, child.tiles.get(j));
-		child.tiles.set(j, NO_TILE);
+		child.tiles[i] = child.tiles[j];
+		child.tiles[j] = NO_TILE;
 
 		return child;
 	}
@@ -135,18 +136,18 @@ public class State implements Comparable<State> {
 	 * violates the contract between {@link #compareTo}
 	 */
 	@Override public boolean equals(Object obj) {
-		return obj != null && obj.getClass().equals(State.class) && tiles.equals(((State) obj).tiles);
+		return obj != null && obj.getClass().equals(State.class) && Arrays.equals(tiles, ((State) obj).tiles);
 	}
 
 	@Override public int hashCode() {
-		return hashcode == 0 ? hashcode = tiles.hashCode() : hashcode;
+		return hashcode == 0 ? hashcode = Arrays.hashCode(tiles) : hashcode;
 	}
 
 	@Override public String toString() {
-		return tiles.toString() + " | evaluation: " + evaluation;
+		return Arrays.toString(tiles) + " | evaluation: " + evaluation;
 	}
 
-	public List<Integer> getTiles() {
+	public int[] getTiles() {
 		return tiles;
 	}
 
@@ -181,19 +182,15 @@ public class State implements Comparable<State> {
 
 		private static int countInversions(State state) {
 			int inversions = 0;
-			List<Integer> tiles = state.getTiles();
+			int[] tiles = state.getTiles();
 
-			for (int i = 0; i < tiles.size() - 1; i++) {
+			for (int i = 0; i < tiles.length - 1; i++) {
+				int a = tiles[i];
+				if (a == 0) continue;
 
-				int a = tiles.get(i);
-				if (a == 0)
-					continue;
-
-				for (int j = i + 1; j < tiles.size(); j++) {
-
-					int b = tiles.get(j);
-					if (b != 0 && a > b)
-						inversions++;
+				for (int j = i + 1; j < tiles.length; j++) {
+					int b = tiles[j];
+					if (b != 0 && a > b) inversions++;
 				}
 			}
 

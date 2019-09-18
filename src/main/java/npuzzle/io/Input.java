@@ -1,12 +1,12 @@
 package npuzzle.io;
 
-import npuzzle.logic.State;
+import static npuzzle.utils.Constants.MANHATTAN;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static npuzzle.utils.Constants.MANHATTAN;
+import npuzzle.logic.State;
 
 public class Input {
 
@@ -15,14 +15,14 @@ public class Input {
 	private String file, algorithm, heuristic;
 	private int n;
 	private boolean isRandom;
-	private List<Integer> tiles;
+	private int[] tiles;
 	private State initialState;
 
 	public Input(String[] args) {
 		this.args = args;
 	}
 
-	private Input(List<Integer> tiles, int n, String algorithm, String heuristic, State initialState) {
+	private Input(int[] tiles, int n, String algorithm, String heuristic, State initialState) {
 		this.tiles = tiles;
 		this.n = n;
 		this.algorithm = algorithm;
@@ -35,7 +35,7 @@ public class Input {
 		return new Input(args);
 	}
 
-	public static Input create(List<Integer> tiles, int n, String algorithm, String heuristic) {
+	public static Input create(int[] tiles, int n, String algorithm, String heuristic) {
 		return new Input(tiles, n, algorithm, heuristic, State.createFrom(tiles, heuristic));
 	}
 
@@ -67,13 +67,13 @@ public class Input {
 		this.heuristic = heuristic;
 	}
 
-	void setTilesAndN(List<Integer> tiles, int n) {
+	void setTilesAndN(int[] tiles, int n) {
 		this.tiles = tiles;
 		this.n = n;
 	}
 
-	List<Integer> getTiles() {
-		return new ArrayList<>(tiles);
+	int[] getTiles() {
+		return tiles.clone();
 	}
 
 	void generateRandomTiles(int n) {
@@ -81,12 +81,13 @@ public class Input {
 		isRandom = true;
 		int nByN = n * n;
 
-		tiles = new ArrayList<>(nByN);
+		List<Integer> tiles = new ArrayList<>(nByN);
 		while (--nByN >= 0)
 			tiles.add(nByN);
 
 		do Collections.shuffle(tiles);
-			while (State.createFrom(tiles, MANHATTAN).isNotSolvable());
+			while (State.createFrom(tiles.stream().mapToInt(i -> i).toArray(), MANHATTAN).isNotSolvable());
+		this.tiles = tiles.stream().mapToInt(i -> i).toArray();
 	}
 
 	boolean isRandom() {

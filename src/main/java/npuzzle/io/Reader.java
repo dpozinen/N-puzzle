@@ -290,7 +290,7 @@ public class Reader {
         }
 
         void saveValidatedTiles(Input input) {
-            input.setTilesAndN(tiles, n);
+            input.setTilesAndN(tiles.stream().mapToInt(i -> i).toArray(), n);
         }
 
     }
